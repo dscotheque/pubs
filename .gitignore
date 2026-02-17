@@ -1,0 +1,25 @@
+# Virtual environment
+.venv/
+
+# Environment secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# SQLite journal files (the DB itself IS committed)
+*.db-wal
+*.db-shm
+
+# Test output
+test_output/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store

@@ -1,0 +1,51 @@
+name: Sync Publications
+
+on:
+  schedule:
+    # Run daily at 06:00 UTC (10 PM PST)
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Inject Slack webhook into config
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          sed -i 's|\${SLACK_WEBHOOK_URL}|'"$SLACK_WEBHOOK_URL"'|g' labpubs.yaml
+
+      - name: Sync publications
+        run: uv run labpubs -c labpubs.yaml sync
+
+      - name: Notify Slack of new publications
+        if: success() && secrets.SLACK_WEBHOOK_URL != ''
+        run: uv run labpubs -c labpubs.yaml notify --days 1
+
+      - name: Commit and push database changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pubs.db pubs.bib pubs.json
+          git diff --cached --quiet || git commit -m "chore: sync publications $(date -u +%Y-%m-%d)"
+          git push

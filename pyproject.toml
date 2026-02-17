@@ -1,0 +1,47 @@
+[project]
+name = "pubs"
+version = "0.1.0"
+description = "Publication tracking for the DScotheque lab"
+requires-python = ">=3.11"
+dependencies = [
+    "labpubs[slack] @ git+https://github.com/nniiicc/labpubs.git",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "orjson>=3.9",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.27",
+    "ruff>=0.8",
+    "mypy>=1.13",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pubs_api"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM"]
+ignore = ["B008"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
