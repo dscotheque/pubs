@@ -12,6 +12,8 @@ permissions:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
     steps:
       - name: Checkout repository
@@ -29,9 +31,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Inject Slack webhook into config
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
         run: |
           sed -i 's|\${SLACK_WEBHOOK_URL}|'"$SLACK_WEBHOOK_URL"'|g' labpubs.yaml
 
@@ -39,7 +39,7 @@ jobs:
         run: uv run labpubs -c labpubs.yaml sync
 
       - name: Notify Slack of new publications
-        if: success() && secrets.SLACK_WEBHOOK_URL != ''
+        if: ${{ success() && env.SLACK_WEBHOOK_URL != '' }}
         run: uv run labpubs -c labpubs.yaml notify --days 1
 
       - name: Commit and push database changes
