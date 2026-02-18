@@ -1,5 +1,3 @@
-# DScotheque Lab Publications
-
 Publication tracking for DSCO. Powered by [labpubs](https://github.com/nniiicc/labpubs).
 
 Syncs publications from **OpenAlex**, **Semantic Scholar**, and **Crossref** into a local SQLite database with deduplication, exports, and Slack notifications. MCP coming soon. 
