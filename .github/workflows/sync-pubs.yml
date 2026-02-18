@@ -35,11 +35,20 @@ jobs:
         run: |
           sed -i 's|\${SLACK_WEBHOOK_URL}|'"$SLACK_WEBHOOK_URL"'|g' labpubs.yaml
 
-      - name: Sync publications
-        run: uv run labpubs -c labpubs.yaml sync
+      # Incremental sync: labpubs reads last_sync from pubs.db and only
+      # fetches publications published after that date. The DB must be
+      # committed to the repo for this to work across runs.
+      - name: Sync new publications
+        id: sync
+        run: |
+          output=$(uv run labpubs -c labpubs.yaml sync 2>&1)
+          echo "$output"
+          new_count=$(echo "$output" | grep -oP 'New publications: \K\d+' || echo "0")
+          echo "new_count=$new_count" >> "$GITHUB_OUTPUT"
 
+      # Only notify Slack when the sync actually found new publications
       - name: Notify Slack of new publications
-        if: ${{ success() && env.SLACK_WEBHOOK_URL != '' }}
+        if: ${{ success() && env.SLACK_WEBHOOK_URL != '' && steps.sync.outputs.new_count != '0' }}
         run: uv run labpubs -c labpubs.yaml notify --days 1
 
       - name: Commit and push database changes
