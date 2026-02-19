@@ -8,7 +8,6 @@ database_path: "pubs.db"
 
 sources:
   - openalex
-  - semantic_scholar
   - crossref
 
 notifications:
@@ -150,20 +149,17 @@ researchers:
     openalex_id: "A5084772545"
 
   - name: "Bin Han"
-    orcid: "0000-0002-5280-9456"
-    openalex_id: "A5102741786"
+    # orcid: "0000-0002-5280-9456" -- resolves to wrong OpenAlex profile (Ningbo/Beijing mathematician)
 
   - name: "Bingbing Wen"
     orcid: "0000-0001-7980-9555"
     openalex_id: "A5100683065"
 
   - name: "Yiwei Yang"
-    orcid: "0009-0008-0136-6465"
-    openalex_id: "A5101822453"
+    # orcid: "0009-0008-0136-6465" -- resolves to wrong OpenAlex profile (Nature Conservancy/Chinese unis)
 
   - name: "Robert Wolfe"
-    orcid: "0000-0001-7133-695X"
-    openalex_id: "A5037981078"
+    # orcid: "0000-0001-7133-695X" -- resolves to wrong OpenAlex profile (Cedars-Sinai medical researcher)
 
   - name: "Zening Qu"
     orcid: "0009-0004-5313-0076"
@@ -178,12 +174,10 @@ researchers:
     openalex_id: "A5120016082"
 
   - name: "Neel Gupta"
-    orcid: "0009-0000-1263-4009"
-    openalex_id: "A5068240666"
+    # orcid: "0009-0000-1263-4009" -- resolves to wrong OpenAlex profile (Schlumberger "Nadish Gupta")
 
   - name: "Nicholas Clark"
-    orcid: "0009-0003-0098-9269"
-    openalex_id: "A5052998590"
+    # orcid: "0009-0003-0098-9269" -- resolves to wrong OpenAlex profile (Notre Dame)
 
   - name: "Navreet Kaur"
     orcid: "0009-0004-7274-7549"
@@ -197,15 +191,13 @@ researchers:
     openalex_id: "A5024401087"
 
   - name: "Ian Yang"
-    orcid: "0000-0002-0689-264X"
-    openalex_id: "A5101941268"
+    # orcid: "0000-0002-0689-264X" -- resolves to wrong OpenAlex profile (Georgia Tech/CMU)
 
   - name: "Yongxu Sun"
     orcid: "0009-0007-8997-8839"
 
   - name: "Joanna Mendy"
-    orcid: "0009-0006-6428-2125"
-    openalex_id: "A5023495896"
+    # orcid: "0009-0006-6428-2125" -- resolves to wrong OpenAlex profile (CU Boulder)
 
   - name: "Jean Myungjin Lee"
     orcid: "0009-0009-7148-9556"
