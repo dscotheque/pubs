@@ -79,18 +79,60 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
+## Google Scholar Alert Ingestion
+
+Supplements API-based syncing by ingesting publications from Google Scholar alert emails via IMAP. Catches papers that OpenAlex may not yet index.
+
+### Prerequisites
+
+1. **Google Scholar Alerts** -- Create alerts for each researcher at [scholar.google.com/scholar_alerts](https://scholar.google.com/scholar_alerts) (profile-based or search-term alerts)
+2. **Gmail App Password** -- Generate at [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) (requires 2-Step Verification)
+3. **Enable IMAP** -- In Gmail Settings > Forwarding and POP/IMAP > Enable IMAP
+
+### Configuration
+
+Store credentials as environment variables (never in the YAML):
+```
+SCHOLAR_EMAIL=your.email@gmail.com
+SCHOLAR_PASSWORD=your-app-password
+```
+
+The `scholar_alerts` section in `labpubs.yaml` maps alert emails to researchers using either a Google Scholar profile user ID or an alert email subject prefix. Faculty are matched by profile ID; students by subject prefix.
+
+### CLI
+
+```bash
+# Ingest unread Scholar alert emails
+uv run labpubs -c labpubs.yaml ingest scholar-alerts
+
+# Include already-read emails
+uv run labpubs -c labpubs.yaml ingest scholar-alerts --all
+
+# Preview without saving
+uv run labpubs -c labpubs.yaml ingest scholar-alerts --dry-run
+```
+
+The nightly GitHub Action runs this automatically when `SCHOLAR_EMAIL` and `SCHOLAR_PASSWORD` secrets are configured.
+
 ## Nightly Sync (GitHub Actions)
 
 A GitHub Action runs daily at 6:00 AM UTC to sync new publications and notify Slack.
 
 The workflow:
-1. Fetches new publications from OpenAlex, Semantic Scholar, and Crossref
-2. Posts new finds to the `#lab-papers` Slack channel
-3. Commits the updated database back to the repo
+1. Fetches new publications from OpenAlex and Crossref
+2. Ingests Google Scholar alert emails (if credentials configured)
+3. Posts new finds to the `#lab-papers` Slack channel
+4. Commits the updated database back to the repo
 
-### Required GitHub Secret
+### Required GitHub Secrets
 
-Add `SLACK_WEBHOOK_URL` at **Settings > Secrets and variables > Actions**.
+Add these at **Settings > Secrets and variables > Actions**:
+
+| Secret | Required | Purpose |
+|--------|----------|---------|
+| `SLACK_WEBHOOK_URL` | Yes | Slack notifications |
+| `SCHOLAR_EMAIL` | Optional | Gmail for Scholar alert ingestion |
+| `SCHOLAR_PASSWORD` | Optional | Gmail App Password for IMAP access |
 
 ## Slack Integration
 
@@ -137,6 +179,9 @@ uv run labpubs -c labpubs.yaml export json -o pubs.json
 
 # Show details for a specific work
 uv run labpubs -c labpubs.yaml show "some search query"
+
+# Ingest Google Scholar alert emails
+uv run labpubs -c labpubs.yaml ingest scholar-alerts
 
 # List researchers and their IDs
 uv run labpubs -c labpubs.yaml researchers
