@@ -1,6 +1,6 @@
 Publication tracking for DSCO. Powered by [labpubs](https://github.com/nniiicc/labpubs).
 
-Syncs publications from **OpenAlex**, **Semantic Scholar**, and **Crossref** into a local SQLite database with deduplication, exports, and Slack notifications. MCP coming soon. 
+Syncs publications from **OpenAlex**, **Crossref**, and **Google Scholar alert emails** into a local SQLite database with deduplication, exports, and Slack notifications.
 
 ## Setup
 
@@ -91,13 +91,15 @@ Supplements API-based syncing by ingesting publications from Google Scholar aler
 
 ### Configuration
 
-Store credentials as environment variables (never in the YAML):
+Store credentials in your `.env` file (never in the YAML):
 ```
 SCHOLAR_EMAIL=your.email@gmail.com
-SCHOLAR_PASSWORD=your-app-password
+SCHOLAR_PASSWORD="xxxx xxxx xxxx xxxx"
 ```
 
-The `scholar_alerts` section in `labpubs.yaml` maps alert emails to researchers using either a Google Scholar profile user ID or an alert email subject prefix. Faculty are matched by profile ID; students by subject prefix.
+Note: Gmail app passwords contain spaces, so wrap the value in quotes.
+
+The `scholar_alerts` section in `labpubs.yaml` maps alert emails to researchers using either a `scholar_profile_user` (Google Scholar user ID from the profile URL) or an `alert_subject_prefix` (fallback for researchers without a Scholar profile). Currently 44 of 47 researchers are matched by profile ID.
 
 ### CLI
 
@@ -205,7 +207,7 @@ uv run ruff format src/ tests/
 
 ## Adding a New Lab Member
 
-Edit `labpubs.yaml` and add an entry under `researchers:`:
+1. Add a researcher entry under `researchers:` in `labpubs.yaml`:
 
 ```yaml
 - name: "New Person"
@@ -213,4 +215,22 @@ Edit `labpubs.yaml` and add an entry under `researchers:`:
   openalex_id: "A5000000000"  # Look up at https://api.openalex.org/authors/https://orcid.org/ORCID
 ```
 
-Then run `uv run labpubs -c labpubs.yaml sync --researcher "New Person"`.
+2. Add a Scholar alert mapping under `scholar_alerts.researcher_map:`:
+
+```yaml
+- researcher_name: "New Person"
+  scholar_profile_user: "XXXXXXXXXXXX"  # From https://scholar.google.com/citations?user=XXXXXXXXXXXX
+```
+
+If the researcher doesn't have a Google Scholar profile, use `alert_subject_prefix` instead:
+
+```yaml
+- researcher_name: "New Person"
+  alert_subject_prefix: "New Person"
+```
+
+3. Run the initial sync:
+
+```bash
+uv run labpubs -c labpubs.yaml sync --researcher "New Person"
+```

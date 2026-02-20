@@ -44,6 +44,7 @@ jobs:
             cp /tmp/labpubs-src/labpubs/config.py "$LABPUBS_DIR/config.py"
             cp /tmp/labpubs-src/labpubs/core.py "$LABPUBS_DIR/core.py"
             cp /tmp/labpubs-src/labpubs/models.py "$LABPUBS_DIR/models.py"
+            cp /tmp/labpubs-src/labpubs/store.py "$LABPUBS_DIR/store.py"
             rm -rf /tmp/labpubs-src
           fi
 
