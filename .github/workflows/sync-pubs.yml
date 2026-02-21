@@ -44,6 +44,7 @@ jobs:
             cp /tmp/labpubs-src/labpubs/config.py "$LABPUBS_DIR/config.py"
             cp /tmp/labpubs-src/labpubs/core.py "$LABPUBS_DIR/core.py"
             cp /tmp/labpubs-src/labpubs/models.py "$LABPUBS_DIR/models.py"
+            cp /tmp/labpubs-src/labpubs/normalize.py "$LABPUBS_DIR/normalize.py"
             cp /tmp/labpubs-src/labpubs/store.py "$LABPUBS_DIR/store.py"
             rm -rf /tmp/labpubs-src
           fi
@@ -84,6 +85,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add pubs.db pubs.bib pubs.json
+          git add --ignore-missing pubs.db pubs.bib pubs.json
           git diff --cached --quiet || git commit -m "chore: sync publications $(date -u +%Y-%m-%d)"
           git push
