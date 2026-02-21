@@ -67,6 +67,7 @@ jobs:
       # Ingest Google Scholar alert emails (if credentials are configured)
       - name: Ingest Scholar alerts
         id: ingest
+        continue-on-error: true
         if: ${{ env.SCHOLAR_EMAIL != '' && env.SCHOLAR_PASSWORD != '' }}
         run: |
           output=$(uv run labpubs -c labpubs.yaml ingest scholar-alerts 2>&1)
