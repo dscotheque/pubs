@@ -4,7 +4,7 @@
 [![Python](https://img.shields.io/badge/python-3.11+-blue?style=flat)](https://www.python.org)
 [![Last Commit](https://img.shields.io/github/last-commit/dscotheque/pubs?style=flat)](https://github.com/dscotheque/pubs/commits/main)
 
-Publication tracking for the [DScotheque Lab](https://dsco.ischool.uw.edu/) at the University of Washington. Powered by [labpubs](https://github.com/nniiicc/labpubs).
+Publication tracking for DSCO - powered by [labpubs](https://github.com/nniiicc/labpubs).
 
 Syncs publications from **OpenAlex**, **Crossref**, and **Google Scholar alert emails** into a local SQLite database with cross-source deduplication, BibTeX/JSON/CSL-JSON exports, a REST API, and Slack notifications.
 
