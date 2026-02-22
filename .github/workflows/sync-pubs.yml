@@ -60,7 +60,7 @@ jobs:
       - name: Sync new publications
         id: sync
         run: |
-          output=$(uv run labpubs -c labpubs.yaml sync 2>&1)
+          output=$(uv run labpubs -c labpubs.yaml sync 2>&1) || true
           echo "$output"
           new_count=$(echo "$output" | grep -oP 'New publications: \K\d+' || echo "0")
           echo "new_count=$new_count" >> "$GITHUB_OUTPUT"
