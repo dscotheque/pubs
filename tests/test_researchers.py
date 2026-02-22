@@ -29,9 +29,7 @@ def test_list_researchers_returns_all(
     mock_engine.get_researchers.assert_called_once()
 
 
-def test_list_researchers_empty(
-    client: TestClient, mock_engine: MagicMock
-) -> None:
+def test_list_researchers_empty(client: TestClient, mock_engine: MagicMock) -> None:
     """Verify GET /researchers returns empty list when no researchers."""
     mock_engine.get_researchers.return_value = []
 

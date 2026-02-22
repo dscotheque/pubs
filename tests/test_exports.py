@@ -7,9 +7,7 @@ from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 
 
-def test_export_bibtex(
-    client: TestClient, mock_engine: MagicMock
-) -> None:
+def test_export_bibtex(client: TestClient, mock_engine: MagicMock) -> None:
     """Verify GET /export/bibtex returns plain text BibTeX."""
     mock_engine.export_bibtex.return_value = "@article{doe2024,\n  title={Test}\n}"
 
@@ -20,9 +18,7 @@ def test_export_bibtex(
     mock_engine.export_bibtex.assert_called_once_with(researcher=None, year=None)
 
 
-def test_export_bibtex_with_filters(
-    client: TestClient, mock_engine: MagicMock
-) -> None:
+def test_export_bibtex_with_filters(client: TestClient, mock_engine: MagicMock) -> None:
     """Verify researcher and year filters are forwarded."""
     mock_engine.export_bibtex.return_value = ""
 
@@ -32,9 +28,7 @@ def test_export_bibtex_with_filters(
     mock_engine.export_bibtex.assert_called_once_with(researcher="Doe", year=2024)
 
 
-def test_export_json(
-    client: TestClient, mock_engine: MagicMock
-) -> None:
+def test_export_json(client: TestClient, mock_engine: MagicMock) -> None:
     """Verify GET /export/json returns JSON list."""
     mock_engine.export_json.return_value = [{"title": "Test", "doi": "10.1234/x"}]
 
@@ -47,9 +41,7 @@ def test_export_json(
     mock_engine.export_json.assert_called_once_with(researcher=None, year=None)
 
 
-def test_export_csl_json(
-    client: TestClient, mock_engine: MagicMock
-) -> None:
+def test_export_csl_json(client: TestClient, mock_engine: MagicMock) -> None:
     """Verify GET /export/csl-json returns CSL-JSON list."""
     mock_engine.export_csl_json.return_value = [
         {"type": "article-journal", "title": "Test"}

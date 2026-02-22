@@ -7,9 +7,7 @@ from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 
 
-def test_get_stats(
-    client: TestClient, mock_engine: MagicMock
-) -> None:
+def test_get_stats(client: TestClient, mock_engine: MagicMock) -> None:
     """Verify GET /stats returns aggregated counts."""
     mock_engine.get_researchers.return_value = [MagicMock()] * 5
     mock_engine.get_works.return_value = [MagicMock()] * 100

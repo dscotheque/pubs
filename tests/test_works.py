@@ -23,9 +23,7 @@ def _make_mock_work(
     return work
 
 
-def test_list_works_no_filters(
-    client: TestClient, mock_engine: MagicMock
-) -> None:
+def test_list_works_no_filters(client: TestClient, mock_engine: MagicMock) -> None:
     """Verify GET /works returns all works when no filters applied."""
     mock_engine.get_works.return_value = [_make_mock_work()]
 
@@ -72,9 +70,7 @@ def test_list_works_with_funder_filter(
     mock_engine.get_works_by_funder.assert_called_once_with("NSF", year=None)
 
 
-def test_list_works_respects_limit(
-    client: TestClient, mock_engine: MagicMock
-) -> None:
+def test_list_works_respects_limit(client: TestClient, mock_engine: MagicMock) -> None:
     """Verify limit parameter caps the number of returned works."""
     works = [_make_mock_work(title=f"Paper {i}") for i in range(10)]
     mock_engine.get_works.return_value = works
@@ -85,9 +81,7 @@ def test_list_works_respects_limit(
     assert len(response.json()) == 3
 
 
-def test_search_works(
-    client: TestClient, mock_engine: MagicMock
-) -> None:
+def test_search_works(client: TestClient, mock_engine: MagicMock) -> None:
     """Verify GET /works/search passes query to engine."""
     mock_engine.search_works.return_value = [_make_mock_work()]
 
@@ -105,9 +99,7 @@ def test_search_works_requires_query(client: TestClient) -> None:
     assert response.status_code == 422
 
 
-def test_get_work_by_doi_found(
-    client: TestClient, mock_engine: MagicMock
-) -> None:
+def test_get_work_by_doi_found(client: TestClient, mock_engine: MagicMock) -> None:
     """Verify GET /works/{doi} returns matching work."""
     work = _make_mock_work(doi="10.1234/test")
     mock_engine.search_works.return_value = [work]
@@ -118,9 +110,7 @@ def test_get_work_by_doi_found(
     assert response.json()["doi"] == "10.1234/test"
 
 
-def test_get_work_by_doi_not_found(
-    client: TestClient, mock_engine: MagicMock
-) -> None:
+def test_get_work_by_doi_not_found(client: TestClient, mock_engine: MagicMock) -> None:
     """Verify GET /works/{doi} returns 404 when DOI not found."""
     mock_engine.search_works.return_value = []
 

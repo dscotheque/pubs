@@ -48,6 +48,9 @@ jobs:
             cp /tmp/labpubs-src/labpubs/store.py "$LABPUBS_DIR/store.py"
             rm -rf /tmp/labpubs-src
           fi
+          # Always apply our patched dedup.py which prefers richer
+          # metadata during merge (title, authors, venue).
+          cp patches/dedup.py "$LABPUBS_DIR/dedup.py"
 
       - name: Inject Slack webhook into config
         if: ${{ env.SLACK_WEBHOOK_URL != '' }}
@@ -75,6 +78,11 @@ jobs:
           echo "$output"
           ingest_count=$(echo "$output" | grep -oP 'New publications: \K\d+' || echo "0")
           echo "ingest_count=$ingest_count" >> "$GITHUB_OUTPUT"
+
+      # Link scholar-alert works to researchers (idempotent; no-op if
+      # no orphaned works exist).
+      - name: Link Scholar alert works to researchers
+        run: uv run python scripts/link_scholar_works.py
 
       # Only notify Slack when sync or ingest found new publications
       - name: Notify Slack of new publications
