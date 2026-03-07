@@ -34,19 +34,17 @@ jobs:
 
       # Workaround: upstream labpubs build excludes the ingest/ module.
       # Patch the installed package from the git source until the next release.
-      - name: Patch labpubs ingest module
+      - name: Patch labpubs from git source
         run: |
           LABPUBS_DIR=$(uv run python -c "import labpubs, pathlib; print(pathlib.Path(labpubs.__file__).parent)")
-          if [ ! -d "$LABPUBS_DIR/ingest" ]; then
-            git clone --depth 1 https://github.com/nniiicc/labpubs.git /tmp/labpubs-src
-            cp -r /tmp/labpubs-src/labpubs/ingest "$LABPUBS_DIR/ingest"
-            cp /tmp/labpubs-src/labpubs/cli.py "$LABPUBS_DIR/cli.py"
-            cp /tmp/labpubs-src/labpubs/config.py "$LABPUBS_DIR/config.py"
-            cp /tmp/labpubs-src/labpubs/core.py "$LABPUBS_DIR/core.py"
-            cp /tmp/labpubs-src/labpubs/models.py "$LABPUBS_DIR/models.py"
-            cp /tmp/labpubs-src/labpubs/store.py "$LABPUBS_DIR/store.py"
-            rm -rf /tmp/labpubs-src
-          fi
+          git clone --depth 1 https://github.com/nniiicc/labpubs.git /tmp/labpubs-src
+          cp -r /tmp/labpubs-src/labpubs/ingest "$LABPUBS_DIR/ingest"
+          cp /tmp/labpubs-src/labpubs/cli.py "$LABPUBS_DIR/cli.py"
+          cp /tmp/labpubs-src/labpubs/config.py "$LABPUBS_DIR/config.py"
+          cp /tmp/labpubs-src/labpubs/core.py "$LABPUBS_DIR/core.py"
+          cp /tmp/labpubs-src/labpubs/models.py "$LABPUBS_DIR/models.py"
+          cp /tmp/labpubs-src/labpubs/store.py "$LABPUBS_DIR/store.py"
+          rm -rf /tmp/labpubs-src
 
       - name: Inject Slack webhook into config
         if: ${{ env.SLACK_WEBHOOK_URL != '' }}
@@ -77,7 +75,7 @@ jobs:
       # Only notify Slack when sync or ingest found new publications
       - name: Notify Slack of new publications
         if: ${{ success() && env.SLACK_WEBHOOK_URL != '' && (steps.sync.outputs.new_count != '0' || steps.ingest.outputs.ingest_count != '0') }}
-        run: uv run labpubs -c labpubs.yaml notify --days 1
+        run: uv run python notify.py --days 1
 
       - name: Commit and push database changes
         run: |
