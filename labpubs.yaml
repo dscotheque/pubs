@@ -21,6 +21,8 @@ exports:
 
 scholar_alerts:
   enabled: true
+  search:
+    unseen_only: false
   researcher_map:
     # Faculty
     - researcher_name: "Martin Saveski"

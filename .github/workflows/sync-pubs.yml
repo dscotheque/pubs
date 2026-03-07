@@ -37,14 +37,16 @@ jobs:
       - name: Patch labpubs from git source
         run: |
           LABPUBS_DIR=$(uv run python -c "import labpubs, pathlib; print(pathlib.Path(labpubs.__file__).parent)")
-          git clone --depth 1 https://github.com/nniiicc/labpubs.git /tmp/labpubs-src
-          cp -r /tmp/labpubs-src/labpubs/ingest "$LABPUBS_DIR/ingest"
-          cp /tmp/labpubs-src/labpubs/cli.py "$LABPUBS_DIR/cli.py"
-          cp /tmp/labpubs-src/labpubs/config.py "$LABPUBS_DIR/config.py"
-          cp /tmp/labpubs-src/labpubs/core.py "$LABPUBS_DIR/core.py"
-          cp /tmp/labpubs-src/labpubs/models.py "$LABPUBS_DIR/models.py"
-          cp /tmp/labpubs-src/labpubs/store.py "$LABPUBS_DIR/store.py"
-          rm -rf /tmp/labpubs-src
+          if [ ! -d "$LABPUBS_DIR/ingest" ]; then
+            git clone --depth 1 https://github.com/nniiicc/labpubs.git /tmp/labpubs-src
+            cp -r /tmp/labpubs-src/labpubs/ingest "$LABPUBS_DIR/ingest"
+            cp /tmp/labpubs-src/labpubs/cli.py "$LABPUBS_DIR/cli.py"
+            cp /tmp/labpubs-src/labpubs/config.py "$LABPUBS_DIR/config.py"
+            cp /tmp/labpubs-src/labpubs/core.py "$LABPUBS_DIR/core.py"
+            cp /tmp/labpubs-src/labpubs/models.py "$LABPUBS_DIR/models.py"
+            cp /tmp/labpubs-src/labpubs/store.py "$LABPUBS_DIR/store.py"
+            rm -rf /tmp/labpubs-src
+          fi
 
       - name: Inject Slack webhook into config
         if: ${{ env.SLACK_WEBHOOK_URL != '' }}
@@ -57,7 +59,7 @@ jobs:
       - name: Sync new publications
         id: sync
         run: |
-          output=$(uv run labpubs -c labpubs.yaml sync 2>&1)
+          output=$(uv run labpubs -c labpubs.yaml sync 2>&1) || true
           echo "$output"
           new_count=$(echo "$output" | grep -oP 'New publications: \K\d+' || echo "0")
           echo "new_count=$new_count" >> "$GITHUB_OUTPUT"
@@ -65,12 +67,18 @@ jobs:
       # Ingest Google Scholar alert emails (if credentials are configured)
       - name: Ingest Scholar alerts
         id: ingest
+        continue-on-error: true
         if: ${{ env.SCHOLAR_EMAIL != '' && env.SCHOLAR_PASSWORD != '' }}
         run: |
-          output=$(uv run labpubs -c labpubs.yaml ingest scholar-alerts 2>&1)
+          output=$(uv run labpubs -c labpubs.yaml ingest scholar-alerts 2>&1) || true
           echo "$output"
           ingest_count=$(echo "$output" | grep -oP 'New publications: \K\d+' || echo "0")
           echo "ingest_count=$ingest_count" >> "$GITHUB_OUTPUT"
+
+      # Link scholar-alert works to researchers (idempotent; no-op if
+      # no orphaned works exist).
+      - name: Link Scholar alert works to researchers
+        run: uv run python scripts/link_scholar_works.py
 
       # Only notify Slack when sync or ingest found new publications
       - name: Notify Slack of new publications
@@ -81,6 +89,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add pubs.db pubs.bib pubs.json
+          for f in pubs.db pubs.bib pubs.json; do [ -f "$f" ] && git add "$f"; done
           git diff --cached --quiet || git commit -m "chore: sync publications $(date -u +%Y-%m-%d)"
           git push
