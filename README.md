@@ -233,26 +233,6 @@ uv run labpubs -c labpubs.yaml ingest scholar-alerts --dry-run
 The nightly GitHub Action runs this automatically when `SCHOLAR_EMAIL` and `SCHOLAR_PASSWORD`
 secrets are configured.
 
-%## Slack Integration
-
-%To set up the Slack notification channel:
-
-%1. Go to [api.slack.com/apps](https://api.slack.com/apps) and click **Create New App** > **From
-   scratch**
-%2. Name it (e.g., "Lab Publications Bot"), select your workspace
-%3. In the left sidebar, click **Incoming Webhooks** > toggle **On**
-%4. Click **Add New Webhook to Workspace**
-%5. Select the `#lab-papers` channel (or create it first) and click **Allow**
-%6. Copy the Webhook URL
-
-%Store it as:
-
-%- **GitHub Secret**: `SLACK_WEBHOOK_URL` (for the nightly cron)
-%- **Local `.env` file** (for manual testing):
-%  ```
-%  SLACK_WEBHOOK_URL=https://hooks.slack.com/services/T.../B.../...
-% ```
-
 ### Test notifications locally
 
 ```bash
