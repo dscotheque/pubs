@@ -8,4 +8,4 @@ Publication tracking for DSCO - powered by [labpubs](https://github.com/nniiicc/
 
 Syncs publications from **OpenAlex**, **Crossref**, and **Google Scholar alert emails** into a local SQLite database with cross-source deduplication, BibTeX/JSON/CSL-JSON exports, a REST API, and Slack notifications.
 
-Contributions welcome - see [documentation]() on how to get started. 
+Contributions welcome - see [documentation](https://github.com/dscotheque/pubs/blob/main/docs.md) on how to get started. 
