@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      SLACK_WEBHOOK_URL2: ${{ secrets.SLACK_WEBHOOK_URL2 }}
       SCHOLAR_EMAIL: ${{ secrets.SCHOLAR_EMAIL }}
       SCHOLAR_PASSWORD: ${{ secrets.SCHOLAR_PASSWORD }}
 
@@ -83,6 +84,12 @@ jobs:
       # Only notify Slack when sync or ingest found new publications
       - name: Notify Slack of new publications
         if: ${{ success() && env.SLACK_WEBHOOK_URL != '' && (steps.sync.outputs.new_count != '0' || steps.ingest.outputs.ingest_count != '0') }}
+        run: uv run python notify.py --days 1
+
+      - name: Notify Slack of new publications (channel 2)
+        if: ${{ success() && env.SLACK_WEBHOOK_URL2 != '' && (steps.sync.outputs.new_count != '0' || steps.ingest.outputs.ingest_count != '0') }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL2 }}
         run: uv run python notify.py --days 1
 
       - name: Commit and push database changes
