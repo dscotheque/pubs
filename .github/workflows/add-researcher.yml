@@ -2,7 +2,7 @@ name: Add Researcher
 
 on:
   issues:
-    types: [opened]
+    types: [labeled]
 
 permissions:
   contents: write
@@ -10,8 +10,10 @@ permissions:
 
 jobs:
   add-researcher:
-    # Only run for issues filed with the add-researcher label
-    if: contains(github.event.issue.labels.*.name, 'add-researcher')
+    # Fires when any label is applied — guard to only run for add-researcher.
+    # Using 'labeled' instead of 'opened' because template-applied labels
+    # are not yet present in github.event.issue.labels when 'opened' fires.
+    if: github.event.label.name == 'add-researcher'
     runs-on: ubuntu-latest
 
     steps:
