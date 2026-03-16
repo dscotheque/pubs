@@ -121,6 +121,9 @@ scholar_alerts:
     - researcher_name: "Imani Finkley"
       scholar_profile_user: "Lz2L5VgAAAAJ"
 
+    - researcher_name: "Alex Efstratiou"
+      scholar_profile_user: "hlaOWkgAAAAJ"
+
 researchers:
   # Faculty
   - name: "Martin Saveski"
@@ -306,3 +309,9 @@ researchers:
 
   - name: "Imani Finkley"
     orcid: "0009-0005-2323-4461"
+
+  - name: "Alex Efstratiou"
+    orcid: "0000-0003-0590-4204"
+    openalex_id: "a5037404436"
+    groups: ["postdoc"]
+    start_date: "2026-03-16"
