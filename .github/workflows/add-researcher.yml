@@ -1,0 +1,95 @@
+name: Add Researcher
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  add-researcher:
+    # Only run for issues filed with the add-researcher label
+    if: contains(github.event.issue.labels.*.name, 'add-researcher')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      # Workaround: upstream labpubs build excludes the ingest/ module.
+      # Patch the installed package from the git source until the next release.
+      - name: Patch labpubs from git source
+        run: |
+          LABPUBS_DIR=$(uv run python -c "import labpubs, pathlib; print(pathlib.Path(labpubs.__file__).parent)")
+          if [ ! -d "$LABPUBS_DIR/ingest" ]; then
+            git clone --depth 1 https://github.com/nniiicc/labpubs.git /tmp/labpubs-src
+            cp -r /tmp/labpubs-src/labpubs/ingest "$LABPUBS_DIR/ingest"
+            cp /tmp/labpubs-src/labpubs/cli.py "$LABPUBS_DIR/cli.py"
+            cp /tmp/labpubs-src/labpubs/config.py "$LABPUBS_DIR/config.py"
+            cp /tmp/labpubs-src/labpubs/core.py "$LABPUBS_DIR/core.py"
+            cp /tmp/labpubs-src/labpubs/models.py "$LABPUBS_DIR/models.py"
+            cp /tmp/labpubs-src/labpubs/store.py "$LABPUBS_DIR/store.py"
+            rm -rf /tmp/labpubs-src
+          fi
+
+      - name: Add researcher to labpubs.yaml
+        id: add
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: uv run python scripts/add_researcher.py
+
+      - name: Sync new researcher into database
+        # Uses the global last_sync date as the API filter, so only
+        # publications from the last ~24 hours are fetched (no backfill).
+        continue-on-error: true
+        if: steps.add.outputs.ALREADY_EXISTS == 'false'
+        run: uv run labpubs -c labpubs.yaml sync --researcher "${{ steps.add.outputs.RESEARCHER_NAME }}"
+
+      - name: Commit and push changes
+        if: steps.add.outputs.ALREADY_EXISTS == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add labpubs.yaml pubs.db
+          git diff --cached --quiet || git commit -m "chore: add researcher ${{ steps.add.outputs.RESEARCHER_NAME }}"
+          git push
+
+      - name: Comment on issue (added)
+        if: steps.add.outputs.ALREADY_EXISTS == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body \
+            "**${{ steps.add.outputs.RESEARCHER_NAME }}** has been added to DSCO publication tracking.
+
+            - Added to \`labpubs.yaml\` with \`start_date\` set to today
+            - Registered in the database
+            - New publications will be collected each night starting from today
+
+            No historical publications have been backfilled."
+
+      - name: Comment on issue (already exists)
+        if: steps.add.outputs.ALREADY_EXISTS == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body \
+            "**${{ steps.add.outputs.RESEARCHER_NAME }}** is already in \`labpubs.yaml\`. No changes were made."
+
+      - name: Close issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh issue close ${{ github.event.issue.number }} --reason completed

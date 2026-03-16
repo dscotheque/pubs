@@ -1,0 +1,68 @@
+name: Add Lab Member
+description: Add a new researcher to DSCO publication tracking.
+title: "add researcher: "
+labels: ["add-researcher"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Add a new researcher to DSCO publication tracking. Leave optional fields blank
+        if unknown — they can be filled in later by editing `labpubs.yaml` directly.
+
+        Publications will be collected **from the date this issue is filed forward**.
+        Historical publications will not be backfilled.
+
+  - type: input
+    id: name
+    attributes:
+      label: Full Name
+      description: Name exactly as it appears in publications (used for database matching).
+      placeholder: Jane Doe
+    validations:
+      required: true
+
+  - type: input
+    id: orcid
+    attributes:
+      label: ORCID
+      description: Find at [orcid.org](https://orcid.org). Enables the most reliable ID resolution.
+      placeholder: "0000-0000-0000-0000"
+
+  - type: input
+    id: openalex_id
+    attributes:
+      label: OpenAlex ID
+      description: >
+        Look up at [openalex.org/authors](https://openalex.org/authors) or via
+        `https://api.openalex.org/authors/https://orcid.org/ORCID`.
+      placeholder: A5000000000
+
+  - type: input
+    id: scholar_profile_user
+    attributes:
+      label: Google Scholar Profile ID
+      description: >
+        The `user=` parameter from their Google Scholar profile URL.
+        E.g., for `scholar.google.com/citations?user=XXXXXXXXXXXX` enter `XXXXXXXXXXXX`.
+      placeholder: XXXXXXXXXXXX
+
+  - type: input
+    id: alert_subject_prefix
+    attributes:
+      label: Alert Subject Prefix
+      description: >
+        Fallback for researchers without a Google Scholar profile. Enter their name
+        exactly as it appears in Scholar alert email subjects.
+      placeholder: Jane Doe
+
+  - type: dropdown
+    id: role
+    attributes:
+      label: Role
+      options:
+        - student
+        - postdoc
+        - faculty
+        - staff
+    validations:
+      required: true
