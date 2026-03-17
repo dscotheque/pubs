@@ -124,6 +124,9 @@ scholar_alerts:
     - researcher_name: "Alex Efstratiou"
       scholar_profile_user: "hlaOWkgAAAAJ"
 
+    - researcher_name: "Rijul Jain"
+      scholar_profile_user: "KUV5w6oAAAAJ"
+
 researchers:
   # Faculty
   - name: "Martin Saveski"
@@ -315,3 +318,8 @@ researchers:
     openalex_id: "a5037404436"
     groups: ["postdoc"]
     start_date: "2026-03-16"
+
+  - name: "Rijul Jain"
+    orcid: "0009-0003-1220-6313"
+    groups: ["student"]
+    start_date: "2026-03-17"
