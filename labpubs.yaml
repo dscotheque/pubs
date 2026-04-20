@@ -127,6 +127,9 @@ scholar_alerts:
     - researcher_name: "Rijul Jain"
       scholar_profile_user: "KUV5w6oAAAAJ"
 
+    - researcher_name: "Belén Saldías"
+      scholar_profile_user: "w-l3BosAAAAJ"
+
 researchers:
   # Faculty
   - name: "Martin Saveski"
@@ -323,3 +326,9 @@ researchers:
     orcid: "0009-0003-1220-6313"
     groups: ["student"]
     start_date: "2026-03-17"
+
+  - name: "Belén Saldías"
+    orcid: "0000-0003-0252-3051"
+    openalex_id: "a5080144834"
+    groups: ["faculty"]
+    start_date: "2026-04-20"
