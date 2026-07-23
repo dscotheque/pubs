@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from scripts.link_scholar_works import (
+    link_coauthors,
     link_scholar_works,
     match_alert_name_to_researcher,
     matches_author_initials,
@@ -118,7 +119,8 @@ CREATE TABLE researchers (
 
 CREATE TABLE works (
     id INTEGER PRIMARY KEY,
-    title TEXT NOT NULL
+    title TEXT NOT NULL,
+    first_seen TEXT
 );
 
 CREATE TABLE work_authors (
@@ -372,3 +374,158 @@ class TestLinkScholarWorks:
         # Work 101 linked from msg1 (Chirag Shah) AND msg2 (Mouly Dewan)
         assert (1,) in rows_101
         assert (2,) in rows_101
+
+
+# -- link_coauthors (end-to-end with in-memory DB) --------------------------
+
+# Researchers modelled on the real DB (ids match pubs.db for readability).
+COAUTHOR_RESEARCHERS = [
+    (10, "Melanie Walsh", "melanie-walsh"),
+    (38, "Neel Gupta", "neel-gupta"),
+    (47, "Imani Finkley", "imani-finkley"),
+]
+
+_RECENT = "2999-01-01T00:00:00"  # always inside any since_days window
+_OLD = "2000-01-01T00:00:00"  # always outside any since_days window
+
+
+def _make_coauthor_db(path: str, first_seen: str = _RECENT) -> None:
+    """Build a DB with the two real co-authored papers, linked to Walsh only.
+
+    Reproduces the reported bug: a Google Scholar alert flags Melanie Walsh
+    on each paper, so only Walsh is linked, even though DSCO co-authors
+    Imani Finkley and Neel Gupta appear in work_authors.
+
+    - Work 1422 "Neutrality Bites": authors I Finkley, Y Li, M Walsh
+    - Work 1425 "AI Fiction in the Wild": authors N Gupta, M Antoniak, M Walsh
+      (M Antoniak is NOT a DSCO researcher and must stay unlinked)
+    """
+    with sqlite3.connect(path) as conn:
+        conn.executescript(SCHEMA)
+        conn.execute("PRAGMA foreign_keys = ON")
+        conn.executemany(
+            "INSERT INTO researchers (id, name, config_key) VALUES (?, ?, ?)",
+            COAUTHOR_RESEARCHERS,
+        )
+        conn.executemany(
+            "INSERT INTO works (id, title, first_seen) VALUES (?, ?, ?)",
+            [
+                (
+                    1422,
+                    "Neutrality Bites: Gender Representation in AI-Generated "
+                    "Animal Stories",
+                    first_seen,
+                ),
+                (1425, "AI Fiction in the Wild", first_seen),
+            ],
+        )
+        conn.executemany(
+            "INSERT INTO work_authors "
+            "(work_id, author_name, author_position) VALUES (?, ?, ?)",
+            [
+                (1422, "I Finkley", 0),
+                (1422, "Y Li", 1),
+                (1422, "M Walsh", 2),
+                (1425, "N Gupta", 0),
+                (1425, "M Antoniak", 1),
+                (1425, "M Walsh", 2),
+            ],
+        )
+        # Only Melanie Walsh (10) is flagged/linked on each paper.
+        conn.executemany(
+            "INSERT INTO researcher_works (researcher_id, work_id) VALUES (?, ?)",
+            [(10, 1422), (10, 1425)],
+        )
+        conn.commit()
+
+
+@pytest.fixture
+def coauthor_db_path(tmp_path: Path) -> str:
+    """Temp DB with the two real papers, recently seen and linked to Walsh."""
+    path = str(tmp_path / "coauthor.db")
+    _make_coauthor_db(path)
+    return path
+
+
+def _linked(db_path: str, work_id: int) -> set[int]:
+    """Return the set of researcher ids linked to a work."""
+    with sqlite3.connect(db_path) as conn:
+        return {
+            row[0]
+            for row in conn.execute(
+                "SELECT researcher_id FROM researcher_works WHERE work_id = ?",
+                (work_id,),
+            )
+        }
+
+
+class TestLinkCoauthors:
+    """End-to-end tests for link_coauthors, using the real reported papers."""
+
+    def test_neutrality_bites_links_imani(self, coauthor_db_path: str) -> None:
+        """Walsh flagged; co-author Imani Finkley ('I Finkley') gets linked."""
+        link_coauthors(coauthor_db_path)
+        linked = _linked(coauthor_db_path, 1422)
+        assert 47 in linked  # Imani Finkley now linked
+        assert 10 in linked  # Melanie Walsh preserved
+
+    def test_ai_fiction_links_neel(self, coauthor_db_path: str) -> None:
+        """Walsh flagged; co-author Neel Gupta ('N Gupta') gets linked, and
+        the non-DSCO co-author 'M Antoniak' is not."""
+        link_coauthors(coauthor_db_path)
+        linked = _linked(coauthor_db_path, 1425)
+        assert linked == {10, 38}  # Walsh + Neel only; Antoniak excluded
+
+    def test_creates_one_linkage_per_paper(self, coauthor_db_path: str) -> None:
+        # Two papers, one missing co-author each (Imani, Neel).
+        assert link_coauthors(coauthor_db_path) == 2
+
+    def test_idempotent(self, coauthor_db_path: str) -> None:
+        first = link_coauthors(coauthor_db_path)
+        second = link_coauthors(coauthor_db_path)
+        assert first == 2
+        assert second == 0
+
+    def test_skips_old_works_outside_window(self, tmp_path: Path) -> None:
+        """Papers first seen before the window are not backfilled."""
+        path = str(tmp_path / "old.db")
+        _make_coauthor_db(path, first_seen=_OLD)
+        assert link_coauthors(path, since_days=7) == 0
+        assert _linked(path, 1422) == {10}  # unchanged
+
+    def test_skips_unlinked_works(self, tmp_path: Path) -> None:
+        """A recent work with no existing linkage is not scanned."""
+        path = str(tmp_path / "unlinked.db")
+        with sqlite3.connect(path) as conn:
+            conn.executescript(SCHEMA)
+            conn.execute("PRAGMA foreign_keys = ON")
+            conn.execute(
+                "INSERT INTO researchers (id, name, config_key) "
+                "VALUES (10, 'Melanie Walsh', 'melanie-walsh')"
+            )
+            conn.execute(
+                "INSERT INTO works (id, title, first_seen) "
+                "VALUES (500, 'Orphan paper', ?)",
+                (_RECENT,),
+            )
+            conn.execute(
+                "INSERT INTO work_authors "
+                "(work_id, author_name, author_position) "
+                "VALUES (500, 'M Walsh', 0)"
+            )
+            conn.commit()
+
+        assert link_coauthors(path) == 0
+
+    def test_no_linked_works(self, tmp_path: Path) -> None:
+        """Empty researcher_works yields no linkages."""
+        path = str(tmp_path / "empty.db")
+        with sqlite3.connect(path) as conn:
+            conn.executescript(SCHEMA)
+            conn.execute(
+                "INSERT INTO researchers (id, name, config_key) "
+                "VALUES (10, 'Melanie Walsh', 'melanie-walsh')"
+            )
+            conn.commit()
+
+        assert link_coauthors(path) == 0
