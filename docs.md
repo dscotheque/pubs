@@ -60,7 +60,7 @@ pubs/
 |   +-- dedup.py          # "Richer wins" merge strategy (patched into labpubs)
 |-- scripts/
 |   +-- link_scholar_works.py  # Links orphaned scholar-alert works to researchers
-+-- tests/                # 65 tests (API, dedup, scholar linking)
++-- tests/                # 74 tests (API, dedup, scholar linking)
 ```
 
 **Three-layer design:**
@@ -91,7 +91,8 @@ publications and notify Slack.
    behavior
 3. Ingests Google Scholar alert emails (if IMAP credentials are configured)
 4. Links orphaned scholar-alert works to researchers via
-   [scripts/link_scholar_works.py](scripts/link_scholar_works.py)
+   [scripts/link_scholar_works.py](scripts/link_scholar_works.py), then links any
+   additional DSCO co-authors found on recently added works
 5. Posts new finds to the `#lab-papers` Slack channel (only when new publications are found)
 6. Commits the updated database and exports back to the repo
 
@@ -206,6 +207,12 @@ SCHOLAR_PASSWORD="xxxx xxxx xxxx xxxx"
    names, with support for nicknames ("Tanushree" -> "Tanu"), middle initials
    ("Emma S. Spiro" -> "Emma Spiro"), and abbreviated author names
    ("BCG Lee" -> "Benjamin Charles Germain Lee")
+6. Links additional DSCO co-authors: a scholar alert (or an API sync) only links a
+   work to the single researcher it named, so co-authors who are also lab members
+   but did not independently surface the paper are missed. After the subject-based
+   linking, `link_coauthors` scans the `work_authors` of recently added papers
+   (those first seen within `--days`, default 7) against all researchers and adds
+   any missing lab-member linkages
 
 ### CLI
 
@@ -360,7 +367,7 @@ erDiagram
 # Install with dev dependencies
 uv sync --extra dev
 
-# Run tests (65 tests)
+# Run tests (74 tests)
 uv run pytest
 
 # Lint
@@ -382,7 +389,7 @@ uv run mypy src/
 | `test_exports.py` | 5 | `/export` endpoints (BibTeX, JSON, CSL-JSON) |
 | `test_stats.py` | 1 | `/stats` endpoint |
 | `test_dedup_patch.py` | 24 | Richer merge strategy (`_pick_richer_str`, `_pick_richer_authors`, `merge_works`) |
-| `test_link_scholar_works.py` | 23 | Name matching, author validation, end-to-end orphan linking |
+| `test_link_scholar_works.py` | 32 | Name matching, author validation, end-to-end orphan and co-author linking |
 
 ## Adding a New Lab Member
 
